@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PIXELIA - Thumbnail Editor</title>
 <link rel="icon" href="images/logo.png">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -16,8 +17,8 @@
     <span class="brand-badge">v2.0</span>
   </div>
   <div class="header-actions" id="header-actions">
-    <button class="btn" id="btn-undo" title="元に戻す (Ctrl+Z)">↶ 戻す</button>
-    <button class="btn" id="btn-redo" title="やり直す (Ctrl+Y)">↷ 進む</button>
+    <button class="btn" id="btn-undo" title="元に戻す (Ctrl+Z)"><i class="fa-solid fa-rotate-left"></i> 戻す</button>
+    <button class="btn" id="btn-redo" title="やり直す (Ctrl+Y)"><i class="fa-solid fa-rotate-right"></i> 進む</button>
   </div>
 </header>
 
@@ -31,10 +32,10 @@
   <!-- 左：ツールバー -->
   <aside class="toolbar" id="toolbar">
     <button class="tool-btn active" id="mode-select" title="選択ツール (V)">
-      <span class="icon">↖</span><span class="label">選択</span>
+      <span class="icon"><i class="fa-solid fa-arrow-pointer"></i></span><span class="label">選択</span>
     </button>
     <button class="tool-btn" id="mode-pan" title="手のひらツール (H / Space押しながらドラッグ)">
-      <span class="icon">✋</span><span class="label">移動</span>
+      <span class="icon"><i class="fa-regular fa-hand"></i></span><span class="label">移動</span>
     </button>
     <div class="tool-sep"></div>
     <!-- プラグインがここに作成ボタンを追加 -->
@@ -63,10 +64,10 @@
       <div class="panel-header">
         <span>レイヤー</span>
         <div style="display:flex; gap:3px;">
-          <button class="btn btn-sm" id="btn-layer-up" title="前面へ (Ctrl+])">▲</button>
-          <button class="btn btn-sm" id="btn-layer-down" title="背面へ (Ctrl+[)">▼</button>
-          <button class="btn btn-sm" id="btn-layer-dup" title="複製 (Ctrl+D)">❐</button>
-          <button class="btn btn-sm btn-danger" id="btn-layer-del" title="削除 (Del)">✕</button>
+          <button class="btn btn-sm" id="btn-layer-up" title="前面へ (Ctrl+])"><i class="fa-solid fa-chevron-up"></i></button>
+          <button class="btn btn-sm" id="btn-layer-down" title="背面へ (Ctrl+[)"><i class="fa-solid fa-chevron-down"></i></button>
+          <button class="btn btn-sm" id="btn-layer-dup" title="複製 (Ctrl+D)"><i class="fa-regular fa-clone"></i></button>
+          <button class="btn btn-sm btn-danger" id="btn-layer-del" title="削除 (Del)"><i class="fa-regular fa-trash-can"></i></button>
         </div>
       </div>
       <div class="layer-list" id="layer-list"></div>
@@ -82,9 +83,9 @@
   </div>
   <div class="status-group">
     <span>Space+ドラッグ: 移動 / Ctrl+ホイール: ズーム / Alt+ドラッグ: 複製</span>
-    <button class="btn btn-sm" id="btn-zoom-out">－</button>
+    <button class="btn btn-sm" id="btn-zoom-out" title="縮小"><i class="fa-solid fa-minus"></i></button>
     <span id="st-zoom">60%</span>
-    <button class="btn btn-sm" id="btn-zoom-in">＋</button>
+    <button class="btn btn-sm" id="btn-zoom-in" title="拡大"><i class="fa-solid fa-plus"></i></button>
     <button class="btn btn-sm" id="btn-zoom-fit" title="Ctrl+0">フィット</button>
   </div>
 </footer>
