@@ -5,10 +5,10 @@ ThumbStudio.registerPlugin({
   id: 'v2-text-layer',
   name: 'テキスト',
   objectType: 'text',
-  layerIcon: 'T',
+  layerIcon: '<i class="fa-solid fa-font"></i>',
 
   toolButton: {
-    icon: 'T',
+    icon: '<i class="fa-solid fa-font"></i>',
     label: '文字',
     title: 'テキストを追加（ダブルクリックで直接編集）',
     onClick(api) {
