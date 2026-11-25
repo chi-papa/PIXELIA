@@ -5,10 +5,10 @@ ThumbStudio.registerPlugin({
   id: 'v2-badge-layer',
   name: 'バッジ',
   objectType: 'badge',
-  layerIcon: '★',
+  layerIcon: '<i class="fa-solid fa-certificate"></i>',
 
   toolButton: {
-    icon: '★',
+    icon: '<i class="fa-solid fa-certificate"></i>',
     label: 'バッジ',
     title: '訴求バッジ・ラベルを追加',
     onClick(api) {
