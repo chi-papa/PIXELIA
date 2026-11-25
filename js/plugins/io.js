@@ -1,5 +1,5 @@
 /**
- * プロジェクトJSON保存／読み込み ＋ PNG/JPEG書き出しプラグイン
+ * プロジェクトJSON保存／読み込み ＋ PNG/JPEG書き出しプラグイン（PIXELIA対応）
  */
 (() => {
   function saveProjectJSON(api) {
@@ -9,7 +9,7 @@
       return copy;
     });
     const payload = {
-      app: 'ThumbStudio',
+      app: 'PIXELIA',
       version: '2.0',
       width: api.state.width,
       height: api.state.height,
@@ -20,7 +20,7 @@
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     const ts = new Date().toISOString().slice(0, 19).replace(/[-:T]/g, '');
-    a.download = `thumb_project_${ts}.json`;
+    a.download = `pixelia_project_${ts}.json`;
     a.href = url;
     a.click();
     URL.revokeObjectURL(url);
@@ -29,7 +29,7 @@
   function exportImage(api, mime, ext) {
     const a = document.createElement('a');
     const ts = new Date().toISOString().slice(0, 19).replace(/[-:T]/g, '');
-    a.download = `thumb_${ts}.${ext}`;
+    a.download = `pixelia_${ts}.${ext}`;
     a.href = api.exportDataURL(mime, 0.92);
     a.click();
   }
