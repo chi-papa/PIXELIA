@@ -1,5 +1,5 @@
 /**
- * 画像レイヤープラグイン（D&D対応・JSON保存対応・角丸・フィット）
+ * 画像レイヤープラグイン（D&D・色調補正・角丸・フィット対応 / PIXELIA用）
  */
 ThumbStudio.registerPlugin({
   id: 'v2-image-layer',
@@ -36,7 +36,10 @@ ThumbStudio.registerPlugin({
             h,
             imgSrc: dataUrl,
             imgElement: img,
-            radius: 0
+            radius: 0,
+            brightness: 100,
+            contrast: 100,
+            saturation: 100
           });
         };
         img.src = dataUrl;
@@ -78,6 +81,16 @@ ThumbStudio.registerPlugin({
     }
     if (!obj.imgElement || !obj.imgElement.complete) return;
 
+    ctx.save();
+
+    // 色調補正フィルターの適用 (明るさ・コントラスト・彩度)
+    const b = obj.brightness ?? 100;
+    const c = obj.contrast ?? 100;
+    const s = obj.saturation ?? 100;
+    if (b !== 100 || c !== 100 || s !== 100) {
+      ctx.filter = `brightness(${b}%) contrast(${c}%) saturate(${s}%)`;
+    }
+
     const r = obj.radius || 0;
     if (r > 0) {
       ctx.beginPath();
@@ -85,6 +98,8 @@ ThumbStudio.registerPlugin({
       ctx.clip();
     }
     ctx.drawImage(obj.imgElement, obj.x, obj.y, obj.w, obj.h);
+
+    ctx.restore();
   },
 
   renderContextBar(bar, obj, api) {
