@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ThumbStudio v2.0 - Plugin-based Thumbnail Editor</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- 1段目：アプリバー -->
+<header class="app-header">
+  <div class="brand">
+    ThumbStudio <span class="brand-badge">v2.0</span>
+  </div>
+  <div class="header-actions" id="header-actions">
+    <button class="btn" id="btn-undo" title="元に戻す (Ctrl+Z)">↶ 戻す</button>
+    <button class="btn" id="btn-redo" title="やり直す (Ctrl+Y)">↷ 進む</button>
+  </div>
+</header>
+
+<!-- 2段目：コンテキストバー -->
+<div class="context-bar" id="context-bar">
+  <span class="ctx-label">オブジェクトを選択すると、よく使う設定がここに表示されます</span>
+</div>
+
+<!-- ワークスペース -->
+<div class="workspace">
+  <!-- 左：ツールバー -->
+  <aside class="toolbar" id="toolbar">
+    <button class="tool-btn active" id="mode-select" title="選択ツール (V)">
+      <span class="icon">↖</span><span class="label">選択</span>
+    </button>
+    <button class="tool-btn" id="mode-pan" title="手のひらツール (H / Space押しながらドラッグ)">
+      <span class="icon">✋</span><span class="label">移動</span>
+    </button>
+    <div class="tool-sep"></div>
+    <!-- プラグインがここに作成ボタンを追加 -->
+  </aside>
+
+  <!-- 中央：ペーストボード付きビューポート -->
+  <main class="stage-wrap" id="stage-wrap">
+    <canvas class="viewport-canvas" id="viewport"></canvas>
+    <textarea id="inline-editor"></textarea>
+  </main>
+
+  <!-- 右：タブ式ドックパネル＋レイヤー -->
+  <aside class="sidebar">
+    <div class="tab-bar" id="tab-bar">
+      <button class="tab-btn active" data-tab="props">プロパティ</button>
+      <!-- プラグインがここにタブを追加 -->
+    </div>
+    <div class="tab-content-wrap" id="tab-content-wrap">
+      <div class="tab-pane active" id="tab-pane-props">
+        <div class="empty-note">オブジェクトを選択してください</div>
+      </div>
+    </div>
+
+    <!-- レイヤーパネル -->
+    <div class="layer-section">
+      <div class="panel-header">
+        <span>レイヤー</span>
+        <div style="display:flex; gap:3px;">
+          <button class="btn btn-sm" id="btn-layer-up" title="前面へ (Ctrl+])">▲</button>
+          <button class="btn btn-sm" id="btn-layer-down" title="背面へ (Ctrl+[)">▼</button>
+          <button class="btn btn-sm" id="btn-layer-dup" title="複製 (Ctrl+D)">❐</button>
+          <button class="btn btn-sm btn-danger" id="btn-layer-del" title="削除 (Del)">✕</button>
+        </div>
+      </div>
+      <div class="layer-list" id="layer-list"></div>
+    </div>
+  </aside>
+</div>
+
+<!-- 下部ステータスバー -->
+<footer class="status-bar">
+  <div class="status-group">
+    <span id="st-artboard">1000 × 1000 px</span>
+    <span id="st-selection">未選択</span>
+  </div>
+  <div class="status-group">
+    <span>Space+ドラッグ: 移動 / Ctrl+ホイール: ズーム / Alt+ドラッグ: 複製</span>
+    <button class="btn btn-sm" id="btn-zoom-out">－</button>
+    <span id="st-zoom">60%</span>
+    <button class="btn btn-sm" id="btn-zoom-in">＋</button>
+    <button class="btn btn-sm" id="btn-zoom-fit" title="Ctrl+0">フィット</button>
+  </div>
+</footer>
+
+<!-- 右クリックメニュー -->
+<div class="context-menu" id="context-menu">
+  <button data-cmd="copy">コピー <span class="sc">Ctrl+C</span></button>
+  <button data-cmd="paste">ペースト <span class="sc">Ctrl+V</span></button>
+  <button data-cmd="pasteInPlace">同じ位置にペースト <span class="sc">Ctrl+F</span></button>
+  <button data-cmd="dup">複製 <span class="sc">Ctrl+D</span></button>
+  <div class="menu-sep"></div>
+  <button data-cmd="front">最前面へ <span class="sc">Ctrl+Shift+]</span></button>
+  <button data-cmd="back">最背面へ <span class="sc">Ctrl+Shift+[</span></button>
+  <button data-cmd="lock">ロック切替</button>
+  <div class="menu-sep"></div>
+  <button data-cmd="delete" style="color:var(--danger);">削除 <span class="sc">Del</span></button>
+</div>
+
+<!-- コアエンジン -->
+<script src="js/core.js"></script>
+
+<!-- プラグイン（不要な行をコメントアウトすれば機能OFF） -->
+<script src="js/plugins/image.js"></script>
+<script src="js/plugins/text.js"></script>
+<script src="js/plugins/shape.js"></script>
+<script src="js/plugins/badge.js"></script>
+<script src="js/plugins/align.js"></script>
+<script src="js/plugins/canvas.js"></script>
+<script src="js/plugins/io.js"></script>
+
+</body>
+</html>
