@@ -5,7 +5,7 @@ ThumbStudio.registerPlugin({
   id: 'v2-image-layer',
   name: '画像',
   objectType: 'image',
-  layerIcon: '🖼',
+  layerIcon: '<i class="fa-regular fa-image"></i>',
 
   init(api) {
     const input = document.createElement('input');
@@ -60,7 +60,7 @@ ThumbStudio.registerPlugin({
   },
 
   toolButton: {
-    icon: '🖼',
+    icon: '<i class="fa-regular fa-image"></i>',
     label: '画像',
     title: '画像を配置（画面へドラッグ＆ドロップも可）',
     onClick() {
