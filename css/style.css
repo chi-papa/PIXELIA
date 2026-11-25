@@ -47,6 +47,15 @@ body {
   align-items: center;
   gap: 8px;
 }
+.brand-logo {
+  height: 30px;
+  width: auto;
+  display: block;
+  background: #ffffff;
+  padding: 3px 8px;
+  border-radius: 5px;
+  object-fit: contain;
+}
 .brand-badge {
   font-size: 10px;
   background: var(--bg-surface);
