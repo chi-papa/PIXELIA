@@ -1,11 +1,6 @@
 /**
  * ============================================================
- * ThumbStudio v2.0 Microkernel Core (Bug-fixed)
- * - ペーストボード付きビューポート描画（Pan & Zoom）
- * - 複数選択（Shift+クリック / ラバーバンド範囲選択）
- * - 回転ハンドル（Shiftで15度スナップ）
- * - 強化スマートガイド（アートボード＋他オブジェクト吸着）
- * - Windows標準ショートカット・右クリックメニュー・D&Dレイヤー
+ * ThumbStudio v2.0 Microkernel Core (PIXELIA / Font Awesome対応)
  * ============================================================
  */
 const ThumbStudio = (() => {
@@ -640,16 +635,13 @@ const ThumbStudio = (() => {
 
   // --- UI更新群 ---
   function updateStatus() {
-    document.getElementById('st-artboard').textContent = `${state.width} × ${state.height} px`;
-    document.getElementById('st-zoom').textContent = `${Math.round(state.zoom * 100)}%`;
+    document.getElementById('st-artboard').textContent = `${state.width} × ${state.height} px`; document.getElementById('st-zoom').textContent = `${Math.round(state.zoom * 100)}%`;
     const sels = getSelectedObjects();
     const stSel = document.getElementById('st-selection');
     if (sels.length === 0) stSel.textContent = '未選択';
     else if (sels.length === 1) {
       const o = sels[0];
-      stSel.textContent = `X:${o.x} Y:${o.y} W:${o.w} H:${o.h} 角度:${o.rotation || 0}°`;
-    } else {
-      stSel.textContent = `${sels.length}個のオブジェクトを選択中`;
+      stSel.textContent = `X:${o.x} Y:${o.y} W:${o.w} H:${o.h} 角度:${o.rotation \vert{}\vert{} 0}°`; } else { stSel.textContent = `${sels.length}個のオブジェクトを選択中`;
     }
   }
 
@@ -658,7 +650,7 @@ const ThumbStudio = (() => {
     const sels = getSelectedObjects();
     bar.innerHTML = '';
     if (sels.length === 0) {
-      bar.innerHTML = `<span class="ctx-label">未選択（アートボード: ${state.width} × ${state.height}px）</span>`;
+      bar.innerHTML = `<span class="ctx-label">未選択（アートボード: ${state.width} ×${state.height}px）</span>`;
       return;
     }
     if (sels.length > 1) {
@@ -684,15 +676,20 @@ const ThumbStudio = (() => {
       item.className = 'layer-item' + (state.selectedIds.includes(obj.id) ? ' active' : '');
       item.draggable = true;
       item.innerHTML = `
-        <span class="layer-icon">${layerIcons.get(obj.type) || '◇'}</span>
+        <span class="layer-icon">${layerIcons.get(obj.type) || '<i class="fa-regular fa-square"></i>'}</span>
         <span class="layer-name"></span>
-        <button class="layer-btn ${obj.visible ? '' : 'off'}" data-act="vis">👁</button>
-        <button class="layer-btn ${obj.locked ? '' : 'off'}" data-act="lock">🔒</button>
+        <button class="layer-btn ${obj.visible ? '' : 'off'}" data-act="vis" title="表示切替">
+          <i class="fa-regular ${obj.visible ? 'fa-eye' : 'fa-eye-slash'}"></i>
+        </button>
+        <button class="layer-btn ${obj.locked ? '' : 'off'}" data-act="lock" title="ロック">
+          <i class="fa-solid ${obj.locked ? 'fa-lock' : 'fa-lock-open'}"></i>
+        </button>
       `;
       item.querySelector('.layer-name').textContent = obj.name || obj.type;
 
       item.addEventListener('click', (e) => {
-        const act = e.target.dataset.act;
+        const actBtn = e.target.closest('[data-act]');
+        const act = actBtn ? actBtn.dataset.act : null;
         if (act === 'vis') { obj.visible = !obj.visible; pushHistory(); updateAllUI(); return; }
         if (act === 'lock') { obj.locked = !obj.locked; pushHistory(); updateAllUI(); return; }
         if (e.shiftKey) {
@@ -927,7 +924,7 @@ const ThumbStudio = (() => {
       if (p.headerButton) {
         const btn = document.createElement('button');
         btn.className = 'btn ' + (p.headerButton.primary ? 'btn-primary' : '');
-        btn.textContent = p.headerButton.label;
+        btn.innerHTML = p.headerButton.label;
         btn.onclick = () => p.headerButton.onClick(api);
         document.getElementById('header-actions').appendChild(btn);
       }
