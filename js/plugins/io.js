@@ -1,5 +1,5 @@
 /**
- * プロジェクトJSON保存／読み込み ＋ PNG/JPEG書き出しプラグイン（PIXELIA対応）
+ * プロジェクトJSON保存／読み込み ＋ PNG/JPEG書き出しプラグイン（PIXELIA / Font Awesome対応）
  */
 (() => {
   function saveProjectJSON(api) {
@@ -89,7 +89,7 @@
       });
     },
     headerButton: {
-      label: '読込(JSON)',
+      label: '<i class="fa-regular fa-folder-open"></i> 読込',
       primary: false,
       onClick() {
         document.getElementById('v2-json-loader').click();
@@ -101,7 +101,7 @@
     id: 'v2-project-save',
     name: 'プロジェクト保存',
     headerButton: {
-      label: '保存(JSON)',
+      label: '<i class="fa-regular fa-floppy-disk"></i> 保存',
       primary: false,
       onClick: (api) => saveProjectJSON(api)
     }
@@ -111,7 +111,7 @@
     id: 'v2-export-png',
     name: 'PNG書出',
     headerButton: {
-      label: 'PNG書出',
+      label: '<i class="fa-solid fa-download"></i> PNG',
       primary: true,
       onClick: (api) => exportImage(api, 'image/png', 'png')
     }
@@ -121,7 +121,7 @@
     id: 'v2-export-jpg',
     name: 'JPG書出',
     headerButton: {
-      label: 'JPG書出',
+      label: '<i class="fa-solid fa-download"></i> JPG',
       primary: false,
       onClick: (api) => exportImage(api, 'image/jpeg', 'jpg')
     }
