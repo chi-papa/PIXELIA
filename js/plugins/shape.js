@@ -5,10 +5,10 @@ ThumbStudio.registerPlugin({
   id: 'v2-shape-layer',
   name: '図形',
   objectType: 'shape',
-  layerIcon: '■',
+  layerIcon: '<i class="fa-solid fa-shapes"></i>',
 
   toolButton: {
-    icon: '■',
+    icon: '<i class="fa-solid fa-shapes"></i>',
     label: '図形',
     title: '長方形・帯・円を追加',
     onClick(api) {
