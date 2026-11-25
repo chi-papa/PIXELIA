@@ -635,13 +635,16 @@ const ThumbStudio = (() => {
 
   // --- UI更新群 ---
   function updateStatus() {
-    document.getElementById('st-artboard').textContent = `${state.width} × ${state.height} px`; document.getElementById('st-zoom').textContent = `${Math.round(state.zoom * 100)}%`;
+    document.getElementById('st-artboard').textContent = `${state.width} × ${state.height} px`;
+    document.getElementById('st-zoom').textContent = `${Math.round(state.zoom * 100)}%`;
     const sels = getSelectedObjects();
     const stSel = document.getElementById('st-selection');
     if (sels.length === 0) stSel.textContent = '未選択';
     else if (sels.length === 1) {
       const o = sels[0];
-      stSel.textContent = `X:${o.x} Y:${o.y} W:${o.w} H:${o.h} 角度:${o.rotation \vert{}\vert{} 0}°`; } else { stSel.textContent = `${sels.length}個のオブジェクトを選択中`;
+      stSel.textContent = `X:${o.x} Y:${o.y} W:${o.w} H:${o.h} 角度:${o.rotation || 0}°`;
+    } else {
+      stSel.textContent = `${sels.length}個のオブジェクトを選択中`;
     }
   }
 
@@ -650,7 +653,7 @@ const ThumbStudio = (() => {
     const sels = getSelectedObjects();
     bar.innerHTML = '';
     if (sels.length === 0) {
-      bar.innerHTML = `<span class="ctx-label">未選択（アートボード: ${state.width} ×${state.height}px）</span>`;
+      bar.innerHTML = `<span class="ctx-label">未選択（アートボード: ${state.width} × ${state.height}px）</span>`;
       return;
     }
     if (sels.length > 1) {
