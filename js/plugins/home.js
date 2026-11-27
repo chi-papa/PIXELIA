@@ -1,8 +1,8 @@
 /**
- * スタート画面（ホーム）・最近のプロジェクト・自動保存プラグイン（PIXELIA用・クリーン版）
- * - 動画を廃止し、シャープなテキストロゴとプリセット選択、最近のプロジェクト一覧に特化
+ * スタート画面（ホーム）・最近のプロジェクト・自動保存プラグイン（PIXELIA用）
+ * - 起動時チラつき防止（HTML側の初期オーバーレイをそのまま再利用）
+ * - ヘッダー左上ロゴクリックでトップページへ戻る機能
  * - 2分ごとの自動保存（オートセーブ）＆ 縮小プレビュー付き履歴管理
- * - ヘッダーに「ホーム」ボタンを自動追加
  */
 ThumbStudio.registerPlugin({
   id: 'v2-home-launcher',
@@ -16,7 +16,6 @@ ThumbStudio.registerPlugin({
     let currentProjectId = 'proj_' + Date.now();
     let currentProjectName = '無題のプロジェクト';
 
-    // サイズプリセット定義
     const PRESETS = [
       { label: 'YouTube サムネイル', w: 1280, h: 720, icon: 'fa-brands fa-youtube' },
       { label: 'SNS 正方形バナー', w: 1080, h: 1080, icon: 'fa-regular fa-square' },
@@ -24,7 +23,6 @@ ThumbStudio.registerPlugin({
       { label: '縦長ストーリー / リール', w: 1080, h: 1920, icon: 'fa-solid fa-mobile-screen' }
     ];
 
-    // 縮小サムネイル（DataURL）を生成
     function createThumbnailDataUrl() {
       try {
         const vp = document.getElementById('viewport');
@@ -135,15 +133,20 @@ ThumbStudio.registerPlugin({
       if (api.fitArtboard) api.fitArtboard();
     }
 
-    const overlay = document.createElement('div');
-    overlay.id = 'pixelia-home-overlay';
-    overlay.style.cssText = `
-      position: fixed; inset: 0; z-index: 9999;
-      background: rgba(15, 23, 42, 0.94);
-      backdrop-filter: blur(8px);
-      display: flex; align-items: center; justify-content: center;
-      padding: 20px; overflow-y: auto;
-    `;
+    // HTML側に初期配置されたオーバーレイがあれば再利用（チラつき防止）
+    let overlay = document.getElementById('pixelia-home-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'pixelia-home-overlay';
+      overlay.style.cssText = `
+        position: fixed; inset: 0; z-index: 9999;
+        background: rgba(15, 23, 42, 0.96);
+        backdrop-filter: blur(8px);
+        display: flex; align-items: center; justify-content: center;
+        padding: 20px; overflow-y: auto;
+      `;
+      document.body.appendChild(overlay);
+    }
 
     function formatTime(ts) {
       if (!ts) return '';
@@ -206,7 +209,6 @@ ThumbStudio.registerPlugin({
           padding: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
           display: flex; flex-direction: column; gap: 20px; color: var(--text-main);
         ">
-          <!-- ヘッダー＆クリーンなテキストロゴ -->
           <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 14px;">
             <div style="display: flex; align-items: center; gap: 12px;">
               <div style="font-size: 20px; font-weight: 800; letter-spacing: 0.1em; color: var(--text-main);">
@@ -231,7 +233,6 @@ ThumbStudio.registerPlugin({
             </div>
           ` : ''}
 
-          <!-- 新規作成セクション -->
           <div>
             <div style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px;">
               新規作成（キャンバスサイズを選択）
@@ -241,7 +242,6 @@ ThumbStudio.registerPlugin({
             </div>
           </div>
 
-          <!-- 最近使ったプロジェクト -->
           <div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
               <span style="font-size: 12px; font-weight: 700; color: var(--text-muted);">
@@ -261,7 +261,6 @@ ThumbStudio.registerPlugin({
         </div>
       `;
 
-      // 新規作成プリセットクリック
       overlay.querySelectorAll('.home-preset-btn').forEach(btn => {
         btn.onclick = () => {
           recordCurrentToRecent();
@@ -281,7 +280,6 @@ ThumbStudio.registerPlugin({
         };
       });
 
-      // 最近のプロジェクト復元
       overlay.querySelectorAll('.home-recent-card').forEach(card => {
         card.onclick = (e) => {
           if (e.target.closest('.home-del-recent')) return;
@@ -294,7 +292,6 @@ ThumbStudio.registerPlugin({
         };
       });
 
-      // 履歴から個別削除
       overlay.querySelectorAll('.home-del-recent').forEach(delBtn => {
         delBtn.onclick = (e) => {
           e.stopPropagation();
@@ -306,7 +303,6 @@ ThumbStudio.registerPlugin({
         };
       });
 
-      // 自動保存データの復元
       overlay.querySelector('#home-restore-auto')?.addEventListener('click', () => {
         if (autoSaved) {
           restoreProjectData(autoSaved, true);
@@ -314,7 +310,6 @@ ThumbStudio.registerPlugin({
         }
       });
 
-      // 今の作業を履歴に手動保存
       overlay.querySelector('#home-save-current')?.addEventListener('click', () => {
         if (!api.state.objects || api.state.objects.length === 0) {
           alert('キャンバスに要素が配置されていません。');
@@ -327,7 +322,6 @@ ThumbStudio.registerPlugin({
         renderHomeScreen();
       });
 
-      // 閉じる
       overlay.querySelector('#home-close-editor')?.addEventListener('click', closeHome);
     }
 
@@ -341,18 +335,21 @@ ThumbStudio.registerPlugin({
       overlay.style.display = 'none';
     }
 
-    document.body.appendChild(overlay);
-
-    // 上部ヘッダーに「ホーム」ボタンを追加
+    // ヘッダー左上のロゴクリックでトップページへ戻る
     const header = document.querySelector('header') || document.querySelector('.topbar');
-    if (header) {
-      const homeBtn = document.createElement('button');
-      homeBtn.className = 'btn btn-sm';
-      homeBtn.innerHTML = '<i class="fa-solid fa-house"></i> ホーム';
-      homeBtn.title = 'スタート画面を開く（新規作成・最近のプロジェクト）';
-      homeBtn.style.marginLeft = '8px';
-      homeBtn.onclick = openHome;
-      header.appendChild(homeBtn);
+    const logoEl =
+      document.getElementById('app-logo') ||
+      header?.querySelector('.logo, .brand, .app-title, h1, img') ||
+      header?.firstElementChild;
+
+    if (logoEl) {
+      logoEl.style.cursor = 'pointer';
+      logoEl.title = 'トップページ（ホーム）へ戻る';
+      logoEl.addEventListener('click', (e) => {
+        // ロゴ内に別ボタンがある場合の誤爆を防止
+        if (e.target.closest('button') && e.target !== logoEl) return;
+        openHome();
+      });
     }
 
     // 2分ごとの自動保存タイマー
