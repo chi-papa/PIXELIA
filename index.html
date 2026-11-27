@@ -1,124 +1,96 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PIXELIA - Thumbnail Editor</title>
-<link rel="icon" href="images/logo.png">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PIXELIA - サムネイル・バナー制作スタジオ</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+  <!-- 起動時のキャンバスチラ見え防止用（home.js がここにスタート画面を描画します） -->
+  <div id="pixelia-home-overlay" style="position:fixed; inset:0; z-index:9999; background:rgba(15,23,42,0.96); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; padding:20px; overflow-y:auto;"></div>
 
-<!-- 1段目：アプリバー -->
-<header class="app-header">
-  <div class="brand">
-    <img src="images/logo.png" alt="PIXELIA" class="brand-logo">
-    <span class="brand-badge">v2.0</span>
-  </div>
-  <div class="header-actions" id="header-actions">
-    <button class="btn" id="btn-undo" title="元に戻す (Ctrl+Z)"><i class="fa-solid fa-rotate-left"></i> 戻す</button>
-    <button class="btn" id="btn-redo" title="やり直す (Ctrl+Y)"><i class="fa-solid fa-rotate-right"></i> 進む</button>
-  </div>
-</header>
-
-<!-- 2段目：コンテキストバー -->
-<div class="context-bar" id="context-bar">
-  <span class="ctx-label">オブジェクトを選択すると、よく使う設定がここに表示されます</span>
-</div>
-
-<!-- ワークスペース -->
-<div class="workspace">
-  <!-- 左：ツールバー -->
-  <aside class="toolbar" id="toolbar">
-    <button class="tool-btn active" id="mode-select" title="選択ツール (V)">
-      <span class="icon"><i class="fa-solid fa-arrow-pointer"></i></span><span class="label">選択</span>
-    </button>
-    <button class="tool-btn" id="mode-pan" title="手のひらツール (H / Space押しながらドラッグ)">
-      <span class="icon"><i class="fa-regular fa-hand"></i></span><span class="label">移動</span>
-    </button>
-    <div class="tool-sep"></div>
-    <!-- プラグインがここに作成ボタンを追加 -->
-  </aside>
-
-  <!-- 中央：ペーストボード付きビューポート -->
-  <main class="stage-wrap" id="stage-wrap">
-    <canvas class="viewport-canvas" id="viewport"></canvas>
-    <textarea id="inline-editor"></textarea>
-  </main>
-
-  <!-- 右：タブ式ドックパネル＋レイヤー -->
-  <aside class="sidebar">
-    <div class="tab-bar" id="tab-bar">
-      <button class="tab-btn active" data-tab="props">プロパティ</button>
-      <!-- プラグインがここにタブを追加 -->
-    </div>
-    <div class="tab-content-wrap" id="tab-content-wrap">
-      <div class="tab-pane active" id="tab-pane-props">
-        <div class="empty-note">オブジェクトを選択してください</div>
+  <!-- 上部ヘッダー -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <div id="app-logo" class="logo" title="トップページ（ホーム）へ戻る" style="cursor:pointer;">
+        PIXELIA
       </div>
     </div>
 
-    <!-- レイヤーパネル -->
-    <div class="layer-section">
-      <div class="panel-header">
-        <span>レイヤー</span>
-        <div style="display:flex; gap:3px;">
-          <button class="btn btn-sm" id="btn-layer-up" title="前面へ (Ctrl+])"><i class="fa-solid fa-chevron-up"></i></button>
-          <button class="btn btn-sm" id="btn-layer-down" title="背面へ (Ctrl+[)"><i class="fa-solid fa-chevron-down"></i></button>
-          <button class="btn btn-sm" id="btn-layer-dup" title="複製 (Ctrl+D)"><i class="fa-regular fa-clone"></i></button>
-          <button class="btn btn-sm btn-danger" id="btn-layer-del" title="削除 (Del)"><i class="fa-regular fa-trash-can"></i></button>
+    <div class="topbar-center">
+      <button class="btn btn-sm" id="btn-undo" title="元に戻す (Ctrl+Z)"><i class="fa-solid fa-rotate-left"></i></button>
+      <button class="btn btn-sm" id="btn-redo" title="やり直す (Ctrl+Y)"><i class="fa-solid fa-rotate-right"></i></button>
+      <div class="divider"></div>
+      <button class="btn btn-sm" id="btn-zoom-out" title="縮小"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+      <span id="zoom-level" class="zoom-label">100%</span>
+      <button class="btn btn-sm" id="btn-zoom-in" title="拡大"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+      <button class="btn btn-sm" id="btn-zoom-fit" title="画面に合わせる"><i class="fa-solid fa-expand"></i></button>
+    </div>
+
+    <div class="topbar-right" id="topbar-actions">
+      <!-- io.js 等がここに保存・書き出しボタンを追加 -->
+    </div>
+  </header>
+
+  <!-- コンテキストバー（選択中オブジェクトのクイック操作） -->
+  <div id="context-bar" class="context-bar"></div>
+
+  <!-- メインワークスペース -->
+  <div class="workspace">
+    <!-- 左ツールバー -->
+    <aside id="toolbar" class="toolbar">
+      <button class="tool-btn active" id="mode-select" title="選択・移動 (V)">
+        <i class="fa-solid fa-arrow-pointer"></i>
+        <span>選択</span>
+      </button>
+      <button class="tool-btn" id="mode-pan" title="手のひらツール (Space)">
+        <i class="fa-solid fa-hand"></i>
+        <span>移動</span>
+      </button>
+      <div class="tool-divider"></div>
+      <!-- 各プラグイン（テキスト・画像・図形・バッジ・パス等）のボタンがここに自動追加 -->
+    </aside>
+
+    <!-- 中央キャンバスエリア -->
+    <main class="canvas-stage" id="canvas-stage">
+      <canvas id="viewport"></canvas>
+    </main>
+
+    <!-- 右ドックパネル（プロパティ・レイヤー・拡張タブ） -->
+    <aside class="dock" id="right-dock">
+      <div class="dock-tabs" id="dock-tabs">
+        <button class="dock-tab active" data-tab="props">プロパティ</button>
+        <button class="dock-tab" data-tab="layers">レイヤー</button>
+      </div>
+      <div class="dock-body">
+        <div class="dock-pane active" id="pane-props">
+          <div id="properties-panel"></div>
+        </div>
+        <div class="dock-pane" id="pane-layers">
+          <div id="layers-panel"></div>
         </div>
       </div>
-      <div class="layer-list" id="layer-list"></div>
-    </div>
-  </aside>
-</div>
-
-<!-- 下部ステータスバー -->
-<footer class="status-bar">
-  <div class="status-group">
-    <span id="st-artboard">1000 × 1000 px</span>
-    <span id="st-selection">未選択</span>
+    </aside>
   </div>
-  <div class="status-group">
-    <span>Space+ドラッグ: 移動 / Ctrl+ホイール: ズーム / Alt+ドラッグ: 複製</span>
-    <button class="btn btn-sm" id="btn-zoom-out" title="縮小"><i class="fa-solid fa-minus"></i></button>
-    <span id="st-zoom">60%</span>
-    <button class="btn btn-sm" id="btn-zoom-in" title="拡大"><i class="fa-solid fa-plus"></i></button>
-    <button class="btn btn-sm" id="btn-zoom-fit" title="Ctrl+0">フィット</button>
-  </div>
-</footer>
 
-<!-- 右クリックメニュー -->
-<div class="context-menu" id="context-menu">
-  <button data-cmd="copy">コピー <span class="sc">Ctrl+C</span></button>
-  <button data-cmd="paste">ペースト <span class="sc">Ctrl+V</span></button>
-  <button data-cmd="pasteInPlace">同じ位置にペースト <span class="sc">Ctrl+F</span></button>
-  <button data-cmd="dup">複製 <span class="sc">Ctrl+D</span></button>
-  <div class="menu-sep"></div>
-  <button data-cmd="front">最前面へ <span class="sc">Ctrl+Shift+]</span></button>
-  <button data-cmd="back">最背面へ <span class="sc">Ctrl+Shift+[</span></button>
-  <button data-cmd="lock">ロック切替</button>
-  <div class="menu-sep"></div>
-  <button data-cmd="delete" style="color:var(--danger);">削除 <span class="sc">Del</span></button>
-</div>
+  <!-- コアエンジン -->
+  <script src="js/core.js"></script>
 
-<!-- コアエンジン -->
-<script src="js/core.js"></script>
+  <!-- 基本プラグイン群 -->
+  <script src="js/plugins/canvas.js"></script>
+  <script src="js/plugins/image.js"></script>
+  <script src="js/plugins/text.js"></script>
+  <script src="js/plugins/shape.js"></script>
+  <script src="js/plugins/badge.js"></script>
+  <script src="js/plugins/path.js"></script>
+  <script src="js/plugins/align.js"></script>
+  <script src="js/plugins/palette.js"></script>
+  <script src="js/plugins/adjust.js"></script>
+  <script src="js/plugins/io.js"></script>
 
-<!-- プラグイン（不要な行をコメントアウトすれば機能OFF） -->
-<script src="js/plugins/image.js"></script>
-<script src="js/plugins/text.js?v=3"></script>
-<script src="js/plugins/shape.js"></script>
-<script src="js/plugins/path.js?v=1"></script>
-<script src="js/plugins/badge.js"></script>
-<script src="js/plugins/align.js"></script>
-<script src="js/plugins/canvas.js"></script>
-<script src="js/plugins/palette.js"></script>
-<script src="js/plugins/adjust.js?v=1"></script>
-<script src="js/plugins/io.js"></script>
-<script src="js/plugins/home.js?v=2"></script>
-
+  <!-- スタート画面・自動保存プラグイン -->
+  <script src="js/plugins/home.js?v=3"></script>
 </body>
 </html>
