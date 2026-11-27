@@ -1,7 +1,6 @@
 /**
- * スタート画面（ホーム）・最近のプロジェクト・自動保存プラグイン（PIXELIA用・完全版）
- * - 起動時オーバーレイ表示（新規作成プリセット / 最近使ったプロジェクト一覧）
- * - 動画ロゴ（pixelia_B_pixel.mp4）の自動再生＆フォールバック表示制御修正済み
+ * スタート画面（ホーム）・最近のプロジェクト・自動保存プラグイン（PIXELIA用・クリーン版）
+ * - 動画を廃止し、シャープなテキストロゴとプリセット選択、最近のプロジェクト一覧に特化
  * - 2分ごとの自動保存（オートセーブ）＆ 縮小プレビュー付き履歴管理
  * - ヘッダーに「ホーム」ボタンを自動追加
  */
@@ -25,7 +24,7 @@ ThumbStudio.registerPlugin({
       { label: '縦長ストーリー / リール', w: 1080, h: 1920, icon: 'fa-solid fa-mobile-screen' }
     ];
 
-    // 縮小サムネイル（DataURL）を生成して容量を節約
+    // 縮小サムネイル（DataURL）を生成
     function createThumbnailDataUrl() {
       try {
         const vp = document.getElementById('viewport');
@@ -37,11 +36,9 @@ ThumbStudio.registerPlugin({
         off.height = Math.round(targetW * ratio);
         const octx = off.getContext('2d');
 
-        // 背景塗り
         octx.fillStyle = api.state.bgColor || '#ffffff';
         octx.fillRect(0, 0, off.width, off.height);
 
-        // アートボード領域を現在の表示キャンバスから簡易転写
         const z = api.state.zoom || 1;
         const sx = api.state.panX || 0;
         const sy = api.state.panY || 0;
@@ -55,7 +52,6 @@ ThumbStudio.registerPlugin({
       }
     }
 
-    // 保存用シリアライズデータ作成（imgElement等のDOM参照を除外）
     function serializeProject(nameOverride) {
       const cleanObjects = (api.state.objects || []).map(obj => {
         const copy = { ...obj };
@@ -95,7 +91,6 @@ ThumbStudio.registerPlugin({
       }
     }
 
-    // 現在の作品を「最近のプロジェクト」へ保存
     function recordCurrentToRecent(customName) {
       if (!api.state.objects || api.state.objects.length === 0) return;
       const data = serializeProject(customName);
@@ -104,7 +99,6 @@ ThumbStudio.registerPlugin({
       saveRecentList(list);
     }
 
-    // 自動保存（オートセーブ）実行
     function runAutoSave() {
       if (!api.state.objects || api.state.objects.length === 0) return;
       try {
@@ -122,7 +116,6 @@ ThumbStudio.registerPlugin({
       }
     }
 
-    // プロジェクトデータをキャンバスへ復元
     function restoreProjectData(data, isFromAutoSave = false) {
       if (!data) return;
       currentProjectId = isFromAutoSave ? ('proj_' + Date.now()) : (data.id || ('proj_' + Date.now()));
@@ -142,7 +135,6 @@ ThumbStudio.registerPlugin({
       if (api.fitArtboard) api.fitArtboard();
     }
 
-    // スタート画面オーバーレイの構築
     const overlay = document.createElement('div');
     overlay.id = 'pixelia-home-overlay';
     overlay.style.cssText = `
@@ -214,14 +206,13 @@ ThumbStudio.registerPlugin({
           padding: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
           display: flex; flex-direction: column; gap: 20px; color: var(--text-main);
         ">
-          <!-- ヘッダー＆ロゴアニメーション枠 -->
+          <!-- ヘッダー＆クリーンなテキストロゴ -->
           <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 14px;">
-            <div style="display: flex; align-items: center; gap: 14px;">
-              <video id="home-logo-video" src="./pixelia_B_pixel.mp4" autoplay muted playsinline style="height: 44px; border-radius: 6px; display: none; background: #ffffff;"></video>
-              <div id="home-logo-fallback" style="font-size: 22px; font-weight: 800; letter-spacing: 0.08em; color: var(--text-main); display: block;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="font-size: 20px; font-weight: 800; letter-spacing: 0.1em; color: var(--text-main);">
                 PIXELIA
               </div>
-              <span style="font-size: 12px; color: var(--text-muted);">サムネイル・バナー制作スタジオ</span>
+              <span style="font-size: 12px; color: var(--text-muted); border-left: 1px solid var(--border); padding-left: 12px;">サムネイル・バナー制作スタジオ</span>
             </div>
             <button class="btn btn-sm" id="home-close-editor">現在のキャンバスへ戻る ✕</button>
           </div>
@@ -269,33 +260,6 @@ ThumbStudio.registerPlugin({
           </div>
         </div>
       `;
-
-      // 動画の読み込み成否に応じた表示切り替え＆自動再生保証
-      const vid = overlay.querySelector('#home-logo-video');
-      const fallback = overlay.querySelector('#home-logo-fallback');
-      if (vid && fallback) {
-        const showVideo = () => {
-          vid.style.display = 'block';
-          fallback.style.display = 'none';
-          vid.currentTime = 0;
-          vid.play().catch(() => {});
-        };
-        const showFallback = () => {
-          vid.style.display = 'none';
-          fallback.style.display = 'block';
-        };
-
-        vid.onloadeddata = showVideo;
-        vid.oncanplay = showVideo;
-        vid.onerror = showFallback;
-
-        // すでにキャッシュ済みで readyState >= 2 の場合にも対応
-        if (vid.readyState >= 2) {
-          showVideo();
-        } else {
-          vid.load();
-        }
-      }
 
       // 新規作成プリセットクリック
       overlay.querySelectorAll('.home-preset-btn').forEach(btn => {
@@ -394,13 +358,11 @@ ThumbStudio.registerPlugin({
     // 2分ごとの自動保存タイマー
     setInterval(runAutoSave, 2 * 60 * 1000);
 
-    // ページを閉じる直前にも自動保存＆最近のプロジェクト更新
     window.addEventListener('beforeunload', () => {
       runAutoSave();
       recordCurrentToRecent();
     });
 
-    // 初回起動時はスタート画面を表示
     renderHomeScreen();
   }
 });
