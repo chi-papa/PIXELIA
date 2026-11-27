@@ -1,11 +1,54 @@
 /**
- * テキストレイヤープラグイン（ダブルクリック直接編集・コンテキストバー・文字間隔）
+ * テキストレイヤープラグイン（PIXELIA用・Google Fonts対応版）
  */
 ThumbStudio.registerPlugin({
   id: 'v2-text-layer',
   name: 'テキスト',
   objectType: 'text',
   layerIcon: '<i class="fa-solid fa-font"></i>',
+
+  init(api) {
+    // 厳選した商用利用可能なGoogle Fontsの定義
+    const FONT_LIST = [
+      { name: 'Noto Sans JP (ゴシック)', family: '"Noto Sans JP", sans-serif', url: 'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap' },
+      { name: 'Noto Serif JP (明朝)', family: '"Noto Serif JP", serif', url: 'https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&display=swap' },
+      { name: 'M PLUS Rounded 1c (丸ゴシック)', family: '"M PLUS Rounded 1c", sans-serif', url: 'https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;900&display=swap' },
+      { name: 'Dela Gothic One (超極太見出し)', family: '"Dela Gothic One", cursive', url: 'https://fonts.googleapis.com/css2?family=Dela+Gothic+One&display=swap' },
+      { name: 'Zen Maru Gothic (丸ゴシック)', family: '"Zen Maru Gothic", sans-serif', url: 'https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@700;900&display=swap' },
+      { name: 'Reggae One (ポップ手書き風)', family: '"Reggae One", cursive', url: 'https://fonts.googleapis.com/css2?family=Reggae+One&display=swap' },
+      { name: 'RocknRoll One (レトロインパクト)', family: '"RocknRoll One", sans-serif', url: 'https://fonts.googleapis.com/css2?family=RocknRoll+One&display=swap' },
+      { name: 'Zen Kurenaido (上品手書き風)', family: '"Zen Kurenaido", sans-serif', url: 'https://fonts.googleapis.com/css2?family=Zen+Kurenaido&display=swap' },
+      { name: 'Yuji Boku (筆文字・和風)', family: '"Yuji Boku", serif', url: 'https://fonts.googleapis.com/css2?family=Yuji+Boku&display=swap' },
+      { name: 'Hina Mincho (アンティーク明朝)', family: '"Hina Mincho", serif', url: 'https://fonts.googleapis.com/css2?family=Hina+Mincho&display=swap' },
+      { name: 'Montserrat (欧文・数字用)', family: '"Montserrat", sans-serif', url: 'https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&display=swap' },
+      { name: 'Oswald (欧文インパクト)', family: '"Oswald", sans-serif', url: 'https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&display=swap' }
+    ];
+
+    // 読み込み済み管理用セット
+    const loadedFonts = new Set();
+
+    api.loadGoogleFont = function(fontFamily) {
+      const match = FONT_LIST.find(f => f.family === fontFamily);
+      if (!match || loadedFonts.has(match.family)) return;
+      loadedFonts.add(match.family);
+
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = match.url;
+      document.head.appendChild(link);
+    };
+
+    // 初期化時にすべての厳選フォントをバックグラウンドで事前ロード
+    FONT_LIST.forEach(f => {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = f.url;
+      document.head.appendChild(link);
+      loadedFonts.add(f.family);
+    });
+
+    api.getFontList = () => FONT_LIST;
+  },
 
   toolButton: {
     icon: '<i class="fa-solid fa-font"></i>',
@@ -21,8 +64,8 @@ ThumbStudio.registerPlugin({
         w: Math.round(api.state.width * 0.8),
         h: 110,
         fontSize: 72,
-        fontWeight: '900',
-        fontFamily: '"Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif',
+        fontWeight: '700',
+        fontFamily: '"Noto Sans JP", sans-serif',
         color: '#111111',
         strokeColor: '#ffffff',
         strokeWidth: 0,
@@ -69,10 +112,13 @@ ThumbStudio.registerPlugin({
     editor.addEventListener('keydown', onKey);
   },
 
-  renderObject(ctx, obj) {
+  renderObject(ctx, obj, api) {
+    if (api && api.loadGoogleFont && obj.fontFamily) {
+      api.loadGoogleFont(obj.fontFamily);
+    }
     const lines = String(obj.text || '').split('\n');
     const lh = obj.fontSize * (obj.lineHeight || 1.25);
-    ctx.font = `${obj.fontWeight || '700'} ${obj.fontSize}px ${obj.fontFamily}`;
+    ctx.font = `${obj.fontWeight || '700'} ${obj.fontSize}px ${obj.fontFamily || '"Noto Sans JP", sans-serif'}`;
     ctx.textBaseline = 'top';
     ctx.textAlign = obj.align || 'center';
     if ('letterSpacing' in ctx) {
@@ -97,22 +143,22 @@ ThumbStudio.registerPlugin({
   },
 
   renderContextBar(bar, obj, api) {
+    const fonts = api.getFontList ? api.getFontList() : [];
+    const fontOptions = fonts.map(f => `<option value='${f.family}' ${obj.fontFamily === f.family ? 'selected' : ''}>${f.name}</option>`).join('');
+
     bar.innerHTML = `
       <div class="ctx-group">
-        <span class="ctx-label">サイズ</span>
-        <input type="number" id="ctx-t-size" value="${obj.fontSize}" style="width:58px;">
-        <select id="ctx-t-weight" style="width:76px;">
-          <option value="400" ${obj.fontWeight==='400'?'selected':''}>標準</option>
-          <option value="700" ${obj.fontWeight==='700'?'selected':''}>太字</option>
-          <option value="900" ${obj.fontWeight==='900'?'selected':''}>極太</option>
+        <select id="ctx-t-font" style="width:145px; font-size:11px;">
+          ${fontOptions}
         </select>
+        <input type="number" id="ctx-t-size" value="${obj.fontSize}" style="width:52px;" title="文字サイズ">
       </div>
       <div class="ctx-group">
         <span class="ctx-label">文字色</span>
         <input type="color" id="ctx-t-col" value="${obj.color}" style="width:32px; height:24px;">
         <span class="ctx-label">フチ</span>
         <input type="color" id="ctx-t-scol" value="${obj.strokeColor}" style="width:32px; height:24px;">
-        <input type="number" id="ctx-t-sw" min="0" max="40" value="${obj.strokeWidth}" style="width:48px;">
+        <input type="number" id="ctx-t-sw" min="0" max="40" value="${obj.strokeWidth}" style="width:42px;">
       </div>
       <div class="ctx-group">
         <button class="btn btn-sm" data-al="left">左</button>
@@ -120,13 +166,22 @@ ThumbStudio.registerPlugin({
         <button class="btn btn-sm" data-al="right">右</button>
       </div>
     `;
+
+    const fontEl = bar.querySelector('#ctx-t-font');
+    fontEl.addEventListener('change', () => {
+      obj.fontFamily = fontEl.value;
+      if (api.loadGoogleFont) api.loadGoogleFont(obj.fontFamily);
+      api.pushHistory();
+      api.render();
+    });
+
     const bind = (sel, key, num = false) => {
       const el = bar.querySelector(sel);
+      if (!el) return;
       el.addEventListener('input', () => { obj[key] = num ? Number(el.value) : el.value; api.render(); });
       el.addEventListener('change', () => { api.pushHistory(); api.renderProperties(); });
     };
     bind('#ctx-t-size', 'fontSize', true);
-    bind('#ctx-t-weight', 'fontWeight');
     bind('#ctx-t-col', 'color');
     bind('#ctx-t-scol', 'strokeColor');
     bind('#ctx-t-sw', 'strokeWidth', true);
@@ -136,10 +191,17 @@ ThumbStudio.registerPlugin({
   },
 
   renderProperties(container, obj, api) {
+    const fonts = api.getFontList ? api.getFontList() : [];
+    const fontOptions = fonts.map(f => `<option value='${f.family}' ${obj.fontFamily === f.family ? 'selected' : ''}>${f.name}</option>`).join('');
+
     container.innerHTML = `
       <div class="field">
         <label>テキスト（ダブルクリックで直接編集可）</label>
         <textarea id="txt-val" rows="3"></textarea>
+      </div>
+      <div class="field">
+        <label>フォントファミリー</label>
+        <select id="txt-font" style="width:100%;">${fontOptions}</select>
       </div>
       <div class="field-row">
         <div class="field"><label>サイズ (px)</label><input type="number" id="txt-size" value="${obj.fontSize}"></div>
@@ -172,8 +234,18 @@ ThumbStudio.registerPlugin({
     `;
     container.querySelector('#txt-val').value = obj.text || '';
 
+    const fontEl = container.querySelector('#txt-font');
+    fontEl.addEventListener('change', () => {
+      obj.fontFamily = fontEl.value;
+      if (api.loadGoogleFont) api.loadGoogleFont(obj.fontFamily);
+      api.pushHistory();
+      api.render();
+      api.renderContextBar();
+    });
+
     const bind = (sel, key, num = false) => {
       const el = container.querySelector(sel);
+      if (!el) return;
       el.addEventListener('input', () => { obj[key] = num ? Number(el.value) : el.value; api.render(); });
       el.addEventListener('change', () => { api.pushHistory(); api.renderContextBar(); });
     };
