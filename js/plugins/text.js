@@ -1,5 +1,5 @@
 /**
- * テキストレイヤープラグイン（PIXELIA用・Google Fonts対応版）
+ * テキストレイヤープラグイン（PIXELIA用・Google Fonts対応修正版）
  */
 ThumbStudio.registerPlugin({
   id: 'v2-text-layer',
@@ -8,23 +8,22 @@ ThumbStudio.registerPlugin({
   layerIcon: '<i class="fa-solid fa-font"></i>',
 
   init(api) {
-    // 厳選した商用利用可能なGoogle Fontsの定義
+    // 厳選した商用利用可能なGoogle Fonts（各フォントの最適ウエイトも指定）
     const FONT_LIST = [
-      { name: 'Noto Sans JP (ゴシック)', family: '"Noto Sans JP", sans-serif', url: 'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap' },
-      { name: 'Noto Serif JP (明朝)', family: '"Noto Serif JP", serif', url: 'https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&display=swap' },
-      { name: 'M PLUS Rounded 1c (丸ゴシック)', family: '"M PLUS Rounded 1c", sans-serif', url: 'https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;900&display=swap' },
-      { name: 'Dela Gothic One (超極太見出し)', family: '"Dela Gothic One", cursive', url: 'https://fonts.googleapis.com/css2?family=Dela+Gothic+One&display=swap' },
-      { name: 'Zen Maru Gothic (丸ゴシック)', family: '"Zen Maru Gothic", sans-serif', url: 'https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@700;900&display=swap' },
-      { name: 'Reggae One (ポップ手書き風)', family: '"Reggae One", cursive', url: 'https://fonts.googleapis.com/css2?family=Reggae+One&display=swap' },
-      { name: 'RocknRoll One (レトロインパクト)', family: '"RocknRoll One", sans-serif', url: 'https://fonts.googleapis.com/css2?family=RocknRoll+One&display=swap' },
-      { name: 'Zen Kurenaido (上品手書き風)', family: '"Zen Kurenaido", sans-serif', url: 'https://fonts.googleapis.com/css2?family=Zen+Kurenaido&display=swap' },
-      { name: 'Yuji Boku (筆文字・和風)', family: '"Yuji Boku", serif', url: 'https://fonts.googleapis.com/css2?family=Yuji+Boku&display=swap' },
-      { name: 'Hina Mincho (アンティーク明朝)', family: '"Hina Mincho", serif', url: 'https://fonts.googleapis.com/css2?family=Hina+Mincho&display=swap' },
-      { name: 'Montserrat (欧文・数字用)', family: '"Montserrat", sans-serif', url: 'https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&display=swap' },
-      { name: 'Oswald (欧文インパクト)', family: '"Oswald", sans-serif', url: 'https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&display=swap' }
+      { name: 'Noto Sans JP (ゴシック)', family: '"Noto Sans JP", sans-serif', weight: '700', url: 'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap' },
+      { name: 'Noto Serif JP (明朝)', family: '"Noto Serif JP", serif', weight: '700', url: 'https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&display=swap' },
+      { name: 'M PLUS Rounded 1c (丸ゴシック)', family: '"M PLUS Rounded 1c", sans-serif', weight: '700', url: 'https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;900&display=swap' },
+      { name: 'Dela Gothic One (超極太見出し)', family: '"Dela Gothic One", sans-serif', weight: '400', url: 'https://fonts.googleapis.com/css2?family=Dela+Gothic+One&display=swap' },
+      { name: 'Zen Maru Gothic (丸ゴシック)', family: '"Zen Maru Gothic", sans-serif', weight: '700', url: 'https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@700;900&display=swap' },
+      { name: 'Reggae One (ポップ手書き風)', family: '"Reggae One", sans-serif', weight: '400', url: 'https://fonts.googleapis.com/css2?family=Reggae+One&display=swap' },
+      { name: 'RocknRoll One (レトロインパクト)', family: '"RocknRoll One", sans-serif', weight: '400', url: 'https://fonts.googleapis.com/css2?family=RocknRoll+One&display=swap' },
+      { name: 'Zen Kurenaido (上品手書き風)', family: '"Zen Kurenaido", sans-serif', weight: '400', url: 'https://fonts.googleapis.com/css2?family=Zen+Kurenaido&display=swap' },
+      { name: 'Yuji Boku (筆文字・和風)', family: '"Yuji Boku", serif', weight: '400', url: 'https://fonts.googleapis.com/css2?family=Yuji+Boku&display=swap' },
+      { name: 'Hina Mincho (アンティーク明朝)', family: '"Hina Mincho", serif', weight: '400', url: 'https://fonts.googleapis.com/css2?family=Hina+Mincho&display=swap' },
+      { name: 'Montserrat (欧文・数字用)', family: '"Montserrat", sans-serif', weight: '900', url: 'https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&display=swap' },
+      { name: 'Oswald (欧文インパクト)', family: '"Oswald", sans-serif', weight: '700', url: 'https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&display=swap' }
     ];
 
-    // 読み込み済み管理用セット
     const loadedFonts = new Set();
 
     api.loadGoogleFont = function(fontFamily) {
@@ -35,17 +34,22 @@ ThumbStudio.registerPlugin({
       const link = document.createElement('link');
       link.rel = 'stylesheet';
       link.href = match.url;
+      link.onload = () => {
+        if (document.fonts) {
+          document.fonts.ready.then(() => api.render());
+        } else {
+          api.render();
+        }
+      };
       document.head.appendChild(link);
     };
 
-    // 初期化時にすべての厳選フォントをバックグラウンドで事前ロード
-    FONT_LIST.forEach(f => {
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = f.url;
-      document.head.appendChild(link);
-      loadedFonts.add(f.family);
-    });
+    // 初期化時に事前ロード
+    FONT_LIST.forEach(f => api.loadGoogleFont(f.family));
+
+    if (document.fonts) {
+      document.fonts.ready.then(() => api.render());
+    }
 
     api.getFontList = () => FONT_LIST;
   },
@@ -148,7 +152,7 @@ ThumbStudio.registerPlugin({
 
     bar.innerHTML = `
       <div class="ctx-group">
-        <select id="ctx-t-font" style="width:145px; font-size:11px;">
+        <select id="ctx-t-font" style="width:155px; font-size:11px;">
           ${fontOptions}
         </select>
         <input type="number" id="ctx-t-size" value="${obj.fontSize}" style="width:52px;" title="文字サイズ">
@@ -170,9 +174,14 @@ ThumbStudio.registerPlugin({
     const fontEl = bar.querySelector('#ctx-t-font');
     fontEl.addEventListener('change', () => {
       obj.fontFamily = fontEl.value;
+      const match = fonts.find(f => f.family === obj.fontFamily);
+      if (match) obj.fontWeight = match.weight;
       if (api.loadGoogleFont) api.loadGoogleFont(obj.fontFamily);
       api.pushHistory();
-      api.render();
+      api.updateAllUI();
+      if (document.fonts) {
+        document.fonts.load(`${obj.fontWeight} ${obj.fontSize}px ${obj.fontFamily}`).then(() => api.render());
+      }
     });
 
     const bind = (sel, key, num = false) => {
@@ -237,10 +246,14 @@ ThumbStudio.registerPlugin({
     const fontEl = container.querySelector('#txt-font');
     fontEl.addEventListener('change', () => {
       obj.fontFamily = fontEl.value;
+      const match = fonts.find(f => f.family === obj.fontFamily);
+      if (match) obj.fontWeight = match.weight;
       if (api.loadGoogleFont) api.loadGoogleFont(obj.fontFamily);
       api.pushHistory();
-      api.render();
-      api.renderContextBar();
+      api.updateAllUI();
+      if (document.fonts) {
+        document.fonts.load(`${obj.fontWeight} ${obj.fontSize}px ${obj.fontFamily}`).then(() => api.render());
+      }
     });
 
     const bind = (sel, key, num = false) => {
