@@ -1,6 +1,7 @@
 /**
- * スタート画面（ホーム）・最近のプロジェクト・自動保存プラグイン（PIXELIA用）
+ * スタート画面（ホーム）・最近のプロジェクト・自動保存プラグイン（PIXELIA用・完全版）
  * - 起動時オーバーレイ表示（新規作成プリセット / 最近使ったプロジェクト一覧）
+ * - 動画ロゴ（pixelia_B_pixel.mp4）の自動再生＆フォールバック表示制御修正済み
  * - 2分ごとの自動保存（オートセーブ）＆ 縮小プレビュー付き履歴管理
  * - ヘッダーに「ホーム」ボタンを自動追加
  */
@@ -87,7 +88,6 @@ ThumbStudio.registerPlugin({
       try {
         localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, MAX_RECENT)));
       } catch (e) {
-        // 容量超過時はサムネイルを削って再試行
         try {
           const slim = list.slice(0, 4).map(item => ({ ...item, thumb: '' }));
           localStorage.setItem(RECENT_KEY, JSON.stringify(slim));
@@ -217,8 +217,8 @@ ThumbStudio.registerPlugin({
           <!-- ヘッダー＆ロゴアニメーション枠 -->
           <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 14px;">
             <div style="display: flex; align-items: center; gap: 14px;">
-              <video id="home-logo-video" src="pixelia_B_pixel.mp4" autoplay muted playsinline style="height: 44px; border-radius: 6px; display: none;"></video>
-              <div id="home-logo-fallback" style="font-size: 22px; font-weight: 800; letter-spacing: 0.08em; color: var(--text-main);">
+              <video id="home-logo-video" src="./pixelia_B_pixel.mp4" autoplay muted playsinline style="height: 44px; border-radius: 6px; display: none; background: #ffffff;"></video>
+              <div id="home-logo-fallback" style="font-size: 22px; font-weight: 800; letter-spacing: 0.08em; color: var(--text-main); display: block;">
                 PIXELIA
               </div>
               <span style="font-size: 12px; color: var(--text-muted);">サムネイル・バナー制作スタジオ</span>
@@ -270,20 +270,36 @@ ThumbStudio.registerPlugin({
         </div>
       `;
 
-      // 動画ファイルが存在すれば表示してフォールバック文字を隠す
+      // 動画の読み込み成否に応じた表示切り替え＆自動再生保証
       const vid = overlay.querySelector('#home-logo-video');
       const fallback = overlay.querySelector('#home-logo-fallback');
       if (vid && fallback) {
-        vid.addEventListener('loadeddata', () => {
+        const showVideo = () => {
           vid.style.display = 'block';
           fallback.style.display = 'none';
-        });
+          vid.currentTime = 0;
+          vid.play().catch(() => {});
+        };
+        const showFallback = () => {
+          vid.style.display = 'none';
+          fallback.style.display = 'block';
+        };
+
+        vid.onloadeddata = showVideo;
+        vid.oncanplay = showVideo;
+        vid.onerror = showFallback;
+
+        // すでにキャッシュ済みで readyState >= 2 の場合にも対応
+        if (vid.readyState >= 2) {
+          showVideo();
+        } else {
+          vid.load();
+        }
       }
 
       // 新規作成プリセットクリック
       overlay.querySelectorAll('.home-preset-btn').forEach(btn => {
         btn.onclick = () => {
-          // 現在の作業があれば履歴へ退避
           recordCurrentToRecent();
 
           const w = Number(btn.dataset.w);
