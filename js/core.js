@@ -1,6 +1,8 @@
 /**
  * ============================================================
  * ThumbStudio v2.0 Microkernel Core (PIXELIA / Font Awesome対応)
+ * - 四隅ハンドルでのテキストサイズ連動リサイズ対応
+ * - 上下左右の辺ハンドル（ボックス枠のみ調整）追加
  * ============================================================
  */
 const ThumbStudio = (() => {
@@ -217,10 +219,16 @@ const ThumbStudio = (() => {
       // 単体選択かつロック解除時のみリサイズ＆回転ハンドル表示
       if (sels.length === 1 && !sel.locked) {
         const handles = [
+          // 四隅ハンドル（テキストはサイズ連動）
           { x: sel.x, y: sel.y },
           { x: sel.x + sel.w, y: sel.y },
           { x: sel.x, y: sel.y + sel.h },
-          { x: sel.x + sel.w, y: sel.y + sel.h }
+          { x: sel.x + sel.w, y: sel.y + sel.h },
+          // 上下左右の辺ハンドル（ボックス枠のみ調整）
+          { x: cx, y: sel.y },
+          { x: cx, y: sel.y + sel.h },
+          { x: sel.x, y: cy },
+          { x: sel.x + sel.w, y: cy }
         ];
         vpCtx.fillStyle = '#ffffff';
         for (const h of handles) {
@@ -301,13 +309,14 @@ const ThumbStudio = (() => {
       const tol = 12 / state.zoom;
       const rotY = sel.y - 24 / state.zoom;
       const cx = sel.x + sel.w / 2;
+      const cy = sel.y + sel.h / 2;
 
       if (Math.hypot(lp.x - cx, lp.y - rotY) <= tol) {
         dragState = {
           mode: 'rotate',
           obj: sel,
           cx,
-          cy: sel.y + sel.h / 2
+          cy
         };
         return;
       }
@@ -315,7 +324,11 @@ const ThumbStudio = (() => {
         { id: 'nw', x: sel.x, y: sel.y },
         { id: 'ne', x: sel.x + sel.w, y: sel.y },
         { id: 'sw', x: sel.x, y: sel.y + sel.h },
-        { id: 'se', x: sel.x + sel.w, y: sel.y + sel.h }
+        { id: 'se', x: sel.x + sel.w, y: sel.y + sel.h },
+        { id: 'n', x: cx, y: sel.y },
+        { id: 's', x: cx, y: sel.y + sel.h },
+        { id: 'w', x: sel.x, y: cy },
+        { id: 'e', x: sel.x + sel.w, y: cy }
       ];
       for (const h of handles) {
         if (Math.abs(lp.x - h.x) <= tol && Math.abs(lp.y - h.y) <= tol) {
@@ -325,7 +338,7 @@ const ThumbStudio = (() => {
             obj: sel,
             startX: pos.x,
             startY: pos.y,
-            orig: { x: sel.x, y: sel.y, w: sel.w, h: sel.h }
+            orig: { x: sel.x, y: sel.y, w: sel.w, h: sel.h, fontSize: sel.fontSize || 48 }
           };
           return;
         }
@@ -447,18 +460,26 @@ const ThumbStudio = (() => {
       const dx = pos.x - dragState.startX;
       const dy = pos.y - dragState.startY;
       const ratio = orig.w / Math.max(1, orig.h);
+      const isCorner = ['nw', 'ne', 'sw', 'se'].includes(dragState.handle);
       let nx = orig.x, ny = orig.y, nw = orig.w, nh = orig.h;
 
       if (dragState.handle.includes('e')) nw = Math.max(10, orig.w + dx);
       if (dragState.handle.includes('s')) nh = Math.max(10, orig.h + dy);
       if (dragState.handle.includes('w')) { nw = Math.max(10, orig.w - dx); nx = orig.x + (orig.w - nw); }
       if (dragState.handle.includes('n')) { nh = Math.max(10, orig.h - dy); ny = orig.y + (orig.h - nh); }
-      if (e.shiftKey) {
+      if (e.shiftKey && isCorner) {
         nh = nw / ratio;
         if (dragState.handle.includes('n')) ny = orig.y + (orig.h - nh);
       }
       o.x = Math.round(nx); o.y = Math.round(ny);
       o.w = Math.round(nw); o.h = Math.round(nh);
+
+      // テキストの四隅リサイズ時のみフォントサイズをボックスに連動
+      if (o.type === 'text' && isCorner && orig.w > 0 && orig.h > 0) {
+        const scale = Math.min(o.w / orig.w, o.h / orig.h);
+        o.fontSize = Math.max(8, Math.round(orig.fontSize * scale));
+      }
+
       updateStatus();
       render();
     } else if (dragState.mode === 'rotate') {
@@ -497,6 +518,7 @@ const ThumbStudio = (() => {
     if (changed) {
       pushHistory();
       renderProperties();
+      renderContextBar();
     }
     render();
   });
