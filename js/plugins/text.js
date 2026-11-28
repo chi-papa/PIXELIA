@@ -1,5 +1,5 @@
 /**
- * テキストレイヤープラグイン（PIXELIA用・Google Fonts対応修正版）
+ * テキストレイヤープラグイン（PIXELIA用・Google Fonts対応＆縦位置揃え対応版）
  */
 ThumbStudio.registerPlugin({
   id: 'v2-text-layer',
@@ -74,6 +74,7 @@ ThumbStudio.registerPlugin({
         strokeColor: '#ffffff',
         strokeWidth: 0,
         align: 'center',
+        vAlign: 'middle',
         lineHeight: 1.25,
         letterSpacing: 0
       });
@@ -121,8 +122,9 @@ ThumbStudio.registerPlugin({
       api.loadGoogleFont(obj.fontFamily);
     }
     const lines = String(obj.text || '').split('\n');
-    const lh = obj.fontSize * (obj.lineHeight || 1.25);
-    ctx.font = `${obj.fontWeight || '700'} ${obj.fontSize}px ${obj.fontFamily || '"Noto Sans JP", sans-serif'}`;
+    const fontSize = obj.fontSize || 48;
+    const lh = fontSize * (obj.lineHeight || 1.25);
+    ctx.font = `${obj.fontWeight || '700'} ${fontSize}px ${obj.fontFamily || '"Noto Sans JP", sans-serif'}`;
     ctx.textBaseline = 'top';
     ctx.textAlign = obj.align || 'center';
     if ('letterSpacing' in ctx) {
@@ -133,8 +135,18 @@ ThumbStudio.registerPlugin({
     if (obj.align === 'center') tx = obj.x + obj.w / 2;
     else if (obj.align === 'right') tx = obj.x + obj.w;
 
+    // テキスト全体の高さを算出し、縦揃え（上・中央・下）に応じた開始Y座標を決定
+    const totalHeight = (lines.length - 1) * lh + fontSize;
+    const vAlign = obj.vAlign || 'top';
+    let startY = obj.y;
+    if (vAlign === 'middle') {
+      startY = obj.y + (obj.h - totalHeight) / 2;
+    } else if (vAlign === 'bottom') {
+      startY = obj.y + obj.h - totalHeight;
+    }
+
     lines.forEach((line, i) => {
-      const ty = obj.y + i * lh;
+      const ty = startY + i * lh;
       if (obj.strokeWidth > 0) {
         ctx.lineJoin = 'round';
         ctx.strokeStyle = obj.strokeColor || '#ffffff';
@@ -149,6 +161,7 @@ ThumbStudio.registerPlugin({
   renderContextBar(bar, obj, api) {
     const fonts = api.getFontList ? api.getFontList() : [];
     const fontOptions = fonts.map(f => `<option value='${f.family}' ${obj.fontFamily === f.family ? 'selected' : ''}>${f.name}</option>`).join('');
+    const curValign = obj.vAlign || 'top';
 
     bar.innerHTML = `
       <div class="ctx-group">
@@ -165,9 +178,14 @@ ThumbStudio.registerPlugin({
         <input type="number" id="ctx-t-sw" min="0" max="40" value="${obj.strokeWidth}" style="width:42px;">
       </div>
       <div class="ctx-group">
-        <button class="btn btn-sm" data-al="left">左</button>
-        <button class="btn btn-sm" data-al="center">中</button>
-        <button class="btn btn-sm" data-al="right">右</button>
+        <button class="btn btn-sm ${obj.align === 'left' ? 'btn-primary' : ''}" data-al="left" title="左揃え">左</button>
+        <button class="btn btn-sm ${obj.align === 'center' ? 'btn-primary' : ''}" data-al="center" title="中央揃え">中</button>
+        <button class="btn btn-sm ${obj.align === 'right' ? 'btn-primary' : ''}" data-al="right" title="右揃え">右</button>
+      </div>
+      <div class="ctx-group">
+        <button class="btn btn-sm ${curValign === 'top' ? 'btn-primary' : ''}" data-val="top" title="上揃え">上</button>
+        <button class="btn btn-sm ${curValign === 'middle' ? 'btn-primary' : ''}" data-val="middle" title="上下中央">央</button>
+        <button class="btn btn-sm ${curValign === 'bottom' ? 'btn-primary' : ''}" data-val="bottom" title="下揃え">下</button>
       </div>
     `;
 
@@ -197,11 +215,15 @@ ThumbStudio.registerPlugin({
     bar.querySelectorAll('[data-al]').forEach(b => {
       b.onclick = () => { obj.align = b.dataset.al; api.pushHistory(); api.updateAllUI(); };
     });
+    bar.querySelectorAll('[data-val]').forEach(b => {
+      b.onclick = () => { obj.vAlign = b.dataset.val; api.pushHistory(); api.updateAllUI(); };
+    });
   },
 
   renderProperties(container, obj, api) {
     const fonts = api.getFontList ? api.getFontList() : [];
     const fontOptions = fonts.map(f => `<option value='${f.family}' ${obj.fontFamily === f.family ? 'selected' : ''}>${f.name}</option>`).join('');
+    const curValign = obj.vAlign || 'top';
 
     container.innerHTML = `
       <div class="field">
@@ -227,17 +249,26 @@ ThumbStudio.registerPlugin({
         <div class="field"><label>行間</label><input type="number" id="txt-lh" step="0.05" value="${obj.lineHeight || 1.25}"></div>
       </div>
       <div class="field-row">
-        <div class="field"><label>文字色</label><input type="color" id="txt-color" value="${obj.color}"></div>
-        <div class="field"><label>揃え</label>
+        <div class="field"><label>横揃え</label>
           <select id="txt-align">
             <option value="left" ${obj.align==='left'?'selected':''}>左揃え</option>
             <option value="center" ${obj.align==='center'?'selected':''}>中央揃え</option>
             <option value="right" ${obj.align==='right'?'selected':''}>右揃え</option>
           </select>
         </div>
+        <div class="field"><label>縦揃え</label>
+          <select id="txt-valign">
+            <option value="top" ${curValign==='top'?'selected':''}>上揃え</option>
+            <option value="middle" ${curValign==='middle'?'selected':''}>上下中央</option>
+            <option value="bottom" ${curValign==='bottom'?'selected':''}>下揃え</option>
+          </select>
+        </div>
       </div>
       <div class="field-row">
+        <div class="field"><label>文字色</label><input type="color" id="txt-color" value="${obj.color}"></div>
         <div class="field"><label>フチ色</label><input type="color" id="txt-sc" value="${obj.strokeColor}"></div>
+      </div>
+      <div class="field-row">
         <div class="field"><label>フチ太さ</label><input type="number" id="txt-sw" min="0" max="40" value="${obj.strokeWidth}"></div>
       </div>
     `;
@@ -267,8 +298,9 @@ ThumbStudio.registerPlugin({
     bind('#txt-weight', 'fontWeight');
     bind('#txt-ls', 'letterSpacing', true);
     bind('#txt-lh', 'lineHeight', true);
-    bind('#txt-color', 'color');
     bind('#txt-align', 'align');
+    bind('#txt-valign', 'vAlign');
+    bind('#txt-color', 'color');
     bind('#txt-sc', 'strokeColor');
     bind('#txt-sw', 'strokeWidth', true);
   }
